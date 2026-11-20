@@ -1,0 +1,14 @@
+# Local credentials and configuration
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+secrets.json
+*.user
+*.suo
+.vs/
+bin/
+obj/
+node_modules/
+.DS_Store
+Thumbs.db
