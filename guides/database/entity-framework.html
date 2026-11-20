@@ -1,0 +1,124 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Entity Framework Core | MSSQL &amp; Oracle</title><style>
+:root{color-scheme:light;--ink:#142338;--muted:#516178;--line:#dce4ed;--accent:#146e75;--bg:#f3f6fa}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,Segoe UI,sans-serif}header{background:#142b40;color:#fff;padding:52px 24px 42px}header>div,main,footer{max-width:920px;margin:auto}h1{font-size:clamp(32px,5vw,48px);line-height:1.13;margin:10px 0}header p{color:#c5d7e5;margin:12px 0 0}.eyebrow{font-size:12px;letter-spacing:.16em;font-weight:750;color:#9be0d8}main{padding:24px 18px 40px}nav{display:flex;flex-wrap:wrap;gap:8px 18px;padding:10px 0 24px}a{color:var(--accent);font-weight:650;text-decoration:none}a:hover{text-decoration:underline}section{background:white;border:1px solid var(--line);border-radius:14px;padding:25px;margin-bottom:18px;scroll-margin-top:12px}h2{font-size:23px;line-height:1.3;margin:0 0 14px}h3{font-size:17px;margin:20px 0 8px}p{margin:10px 0}li{margin:5px 0}small,.muted{color:var(--muted)}.num{font-size:13px;display:inline-block;vertical-align:3px;margin-right:10px;color:var(--accent);font-weight:800}.code{position:relative;background:#142338;border-radius:9px;margin:12px 0;color:#e4edf8;overflow:hidden}.code pre{margin:0;padding:44px 16px 18px;overflow:auto;font:13px/1.65 Consolas,monospace;tab-size:4}.copy{position:absolute;right:9px;top:8px;border:1px solid #587084;background:#203b50;color:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font:12px system-ui}p code,li code,td code{background:#edf3f6;padding:2px 5px;border-radius:4px;font-size:.9em;overflow-wrap:anywhere}table{width:100%;border-collapse:collapse;text-align:left}td,th{padding:11px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:12px;text-transform:uppercase;color:var(--muted)}.note{border-left:4px solid #c78b29;background:#fff8e8;padding:12px 15px;border-radius:4px;margin:16px 0}.flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:16px 0}.flow span{border:1px solid var(--line);background:#f2f7f8;padding:8px 12px;border-radius:7px;font-weight:600}.flow b{color:var(--accent)}footer{padding:0 24px 30px;color:var(--muted);font-size:13px}@media print{body{background:white}header{background:white;color:var(--ink);padding:15px}header p,.eyebrow{color:var(--muted)}section{break-inside:auto;border:none;padding:10px}.copy,nav{display:none}.code pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;color:#111;background:#f0f2f4}.code{break-inside:auto}}</style></head><body><header><div><div class="eyebrow">C# / DATABASE ACCESS / QUICK START</div><h1>Entity Framework Core with MSSQL &amp; Oracle</h1><p>One model. Two DbContexts. Raw SQL and LINQ.</p></div></header><main><nav><a href="#setup">01 NuGet</a><a href="#model">02 Model</a><a href="#context">03 DbContext</a><a href="#program">04 Program</a><a href="#run">05 Run</a><a href="#parameters">06 Parameters</a><a href="#troubleshoot">07 Troubleshooting</a></nav><section id="setup"><h2><span class="num">01</span>Install the NuGet packages</h2><p>Create or open a modern .NET Console App in Visual Studio. Right-click the project in Solution Explorer → <strong>Manage NuGet Packages</strong> → Browse. Search for each package, select the project and click Install.</p><table><thead><tr><th>Package</th><th>Purpose</th></tr></thead><tbody><tr><td><code>Microsoft.EntityFrameworkCore.SqlServer</code></td><td>EF Core provider for Microsoft SQL Server.</td></tr><tr><td><code>Oracle.EntityFrameworkCore</code></td><td>EF Core provider for Oracle.</td></tr></tbody></table><p>Both providers bring in the required EF Core dependencies. Choose compatible provider versions for the same EF Core major version and your target .NET framework. Check the Oracle package's Dependencies tab before installing. No CLI, migration tools or Dapper required.</p><div class="note"><strong>Oracle compatibility:</strong> Verify your Oracle server version before choosing the provider. Modern Oracle EF Core versions have SQL compatibility options for newer Oracle releases (19, 21, 23); older servers may require older providers or a different data-access approach.</div><div class="flow"><span>C# application</span><b>→</b><span>DbContext / EF Core</span><b>→</b><span>SQL Server or Oracle provider</span><b>→</b><span>Database</span></div></section><section id="model"><h2><span class="num">02</span>Create the Coil model</h2><p>Right-click your project → Add → Class. Name it <strong>Coil.cs</strong>. This class represents a row from the Coils table.</p><div class="code"><button type="button" class="copy">Copy code</button><pre><code>public class Coil
+{
+    public int Id { get; set; }
+    public string CoilNumber { get; set; } = &quot;&quot;;
+    public double Weight { get; set; }
+}</code></pre></div><p><code>Id</code> is recognized as a primary key by EF Core convention. This example assumes the table has a corresponding unique key and compatible column types. Adjust mappings and nullability to your real schema. For a read-only source without a key, configure a keyless entity with <code>HasNoKey()</code> instead.</p><h3>Project structure</h3><div class="code"><button type="button" class="copy">Copy code</button><pre><code>MillApplication/
+    Program.cs        // Connections, queries and output
+    Coil.cs           // Shared entity model
+    SqlMillContext.cs  // MSSQL configuration
+    OracleMillContext.cs // Oracle configuration</code></pre></div></section><section id="context"><h2><span class="num">03</span>Create both DbContext classes</h2><p>Unlike Dapper, EF Core requires a context to manage the database provider and entity mapping. <code>DbSet&lt;Coil&gt;</code> exposes the mapped Coils table. Separate contexts make each database's table and column mappings explicit.</p><h3>SqlMillContext.cs</h3><div class="code"><button type="button" class="copy">Copy code</button><pre><code>using Microsoft.EntityFrameworkCore;
+
+public class SqlMillContext : DbContext
+{
+    private readonly string _connectionString;
+
+    public SqlMillContext(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    public DbSet&lt;Coil&gt; Coils =&gt; Set&lt;Coil&gt;();
+
+    protected override void OnConfiguring(DbContextOptionsBuilder options)
+    {
+        options.UseSqlServer(_connectionString);
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity&lt;Coil&gt;().ToTable(&quot;Coils&quot;);
+    }
+}</code></pre></div><h3>OracleMillContext.cs</h3><div class="code"><button type="button" class="copy">Copy code</button><pre><code>using Microsoft.EntityFrameworkCore;
+
+public class OracleMillContext : DbContext
+{
+    private readonly string _connectionString;
+
+    public OracleMillContext(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    public DbSet&lt;Coil&gt; Coils =&gt; Set&lt;Coil&gt;();
+
+    protected override void OnConfiguring(DbContextOptionsBuilder options)
+    {
+        options.UseOracle(_connectionString);
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity&lt;Coil&gt;(entity =&gt;
+        {
+            entity.ToTable(&quot;COILS&quot;);
+            entity.Property(c =&gt; c.Id).HasColumnName(&quot;ID&quot;);
+            entity.Property(c =&gt; c.CoilNumber).HasColumnName(&quot;COILNUMBER&quot;);
+            entity.Property(c =&gt; c.Weight).HasColumnName(&quot;WEIGHT&quot;);
+        });
+    }
+}</code></pre></div><p class="muted">Oracle normally stores unquoted identifiers in uppercase. If the real table is owned by another schema, use <code>ToTable("COILS", "OWNER")</code> and qualify the raw SQL too. Change these mappings if your actual identifiers differ.</p></section><section id="program"><h2><span class="num">04</span>Program.cs — complete example</h2><p>Replace the contents of Program.cs with this example. It demonstrates four independent queries: MSSQL raw SQL, MSSQL LINQ, Oracle raw SQL and Oracle LINQ. Each produces a <code>List&lt;Coil&gt;</code> and prints the results.</p><div class="note"><strong>Private training file:</strong> Connection strings are supplied through environment variables. Never commit actual credentials to GitHub. In production, use environment variables or an approved secret store.</div><div class="code"><button type="button" class="copy">Copy code</button><pre><code>using Microsoft.EntityFrameworkCore;
+
+string sqlConnectionString =
+    Environment.GetEnvironmentVariable(&quot;MSSQL_CONNECTION_STRING&quot;) ?? throw new InvalidOperationException(&quot;Set MSSQL_CONNECTION_STRING&quot;);
+
+string oracleConnectionString =
+    Environment.GetEnvironmentVariable(&quot;ORACLE_CONNECTION_STRING&quot;) ?? throw new InvalidOperationException(&quot;Set ORACLE_CONNECTION_STRING&quot;);
+
+// MSSQL
+using var sqlDb = new SqlMillContext(sqlConnectionString);
+
+List&lt;Coil&gt; sqlRawCoils = await sqlDb.Coils
+    .FromSqlRaw(&quot;SELECT * FROM Coils WHERE Weight &gt; 20&quot;)
+    .AsNoTracking()
+    .ToListAsync();
+
+List&lt;Coil&gt; sqlLinqCoils = await sqlDb.Coils
+    .Where(c =&gt; c.Weight &gt; 20)
+    .AsNoTracking()
+    .ToListAsync();
+
+// Oracle
+using var oracleDb = new OracleMillContext(oracleConnectionString);
+
+List&lt;Coil&gt; oracleRawCoils = await oracleDb.Coils
+    .FromSqlRaw(&quot;SELECT * FROM Coils WHERE Weight &gt; 20&quot;)
+    .AsNoTracking()
+    .ToListAsync();
+
+List&lt;Coil&gt; oracleLinqCoils = await oracleDb.Coils
+    .Where(c =&gt; c.Weight &gt; 20)
+    .AsNoTracking()
+    .ToListAsync();
+
+DisplayCoils(&quot;MSSQL - Raw SQL&quot;, sqlRawCoils);
+DisplayCoils(&quot;MSSQL - LINQ&quot;, sqlLinqCoils);
+DisplayCoils(&quot;Oracle - Raw SQL&quot;, oracleRawCoils);
+DisplayCoils(&quot;Oracle - LINQ&quot;, oracleLinqCoils);
+
+static void DisplayCoils(string title, List&lt;Coil&gt; coils)
+{
+    Console.WriteLine($&quot;\n{title} ({coils.Count} coils)&quot;);
+
+    foreach (Coil coil in coils)
+    {
+        Console.WriteLine($&quot;{coil.CoilNumber}: {coil.Weight} tons&quot;);
+    }
+}</code></pre></div><p>Run one query at a time if you're testing connections individually. The queries are sequential here; never run multiple operations concurrently on the same DbContext.</p></section><section id="run"><h2><span class="num">05</span>Run and understand the results</h2><p>Press Ctrl+F5 in Visual Studio. The four query results will be printed to the console. Example output (illustrative only):</p><div class="code"><button type="button" class="copy">Copy code</button><pre><code>MSSQL - Raw SQL (2 coils)
+C1001: 23.5 tons
+C1002: 25.1 tons
+
+MSSQL - LINQ (2 coils)
+C1001: 23.5 tons
+C1002: 25.1 tons</code></pre></div><table><thead><tr><th>Code</th><th>What it does</th></tr></thead><tbody><tr><td><code>using var db</code></td><td>Disposes the context at the end of scope.</td></tr><tr><td><code>FromSqlRaw()</code></td><td>Uses a SQL statement you supply.</td></tr><tr><td><code>Where()</code></td><td>Builds a LINQ filter translated into SQL.</td></tr><tr><td><code>AsNoTracking()</code></td><td>Skips change tracking for read-only results.</td></tr><tr><td><code>ToListAsync()</code></td><td>Executes the query asynchronously and returns a list when awaited.</td></tr></tbody></table></section><section id="parameters"><h2><span class="num">06</span>Use parameters for dynamic values</h2><p>When the weight threshold is a variable, use interpolated SQL through <code>FromSqlInterpolated()</code>, or LINQ. EF Core parameterizes these examples automatically.</p><h3>Raw SQL — works with either context</h3><div class="code"><button type="button" class="copy">Copy code</button><pre><code>double minimumWeight = 20;
+
+List&lt;Coil&gt; coils = await sqlDb.Coils
+    .FromSqlInterpolated($&quot;SELECT * FROM Coils WHERE Weight &gt; {minimumWeight}&quot;)
+    .AsNoTracking()
+    .ToListAsync();</code></pre></div><h3>LINQ — works with either context</h3><div class="code"><button type="button" class="copy">Copy code</button><pre><code>double minimumWeight = 20;
+
+List&lt;Coil&gt; coils = await oracleDb.Coils
+    .Where(c =&gt; c.Weight &gt; minimumWeight)
+    .AsNoTracking()
+    .ToListAsync();</code></pre></div><p>Do not concatenate user input into SQL or interpolate it inside <code>FromSqlRaw()</code>.</p></section><section id="troubleshoot"><h2><span class="num">07</span>Troubleshooting &amp; Dapper comparison</h2><table><thead><tr><th>Problem</th><th>Check</th></tr></thead><tbody><tr><td>UseSqlServer / UseOracle not found</td><td>Install correct provider and import Microsoft.EntityFrameworkCore.</td></tr><tr><td>Package downgrade or dependency errors</td><td>Align EF Core versions within the Oracle provider's declared dependency range.</td></tr><tr><td>SQL Server certificate error</td><td>Verify the server certificate and your organization's encryption policy. Prefer a trusted certificate rather than disabling validation.</td></tr><tr><td>ORA-12154 / ORA-12514</td><td>Verify host, port, service name and network access.</td></tr><tr><td>ORA-00942 / ORA-00904</td><td>Confirm schema, table, column names, capitalization and SELECT grants.</td></tr><tr><td>Missing required column</td><td>Raw SQL must return all mapped entity properties with compatible names and types.</td></tr><tr><td>Entity requires a primary key</td><td>Map the real primary key, or configure a keyless type for read-only data.</td></tr></tbody></table><h3>Side-by-side</h3><table><thead><tr><th>Dapper</th><th>EF Core</th></tr></thead><tbody><tr><td>SqlConnection / OracleConnection</td><td>DbContext configured with UseSqlServer / UseOracle</td></tr><tr><td>QueryAsync&lt;Coil&gt;(). result converted with ToList()</td><td>FromSqlRaw() or Where(), then ToListAsync()</td></tr><tr><td>Manual SQL</td><td>Raw SQL or LINQ</td></tr><tr><td>No automatic tracking</td><td>Optional change tracking</td></tr></tbody></table><p>No database migrations are required to query existing tables. This guide does not create or modify your database.</p><h3>Official references</h3><p><a href="https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/">DbContext configuration</a> · <a href="https://learn.microsoft.com/en-us/ef/core/querying/sql-queries">Raw SQL queries</a> · <a href="https://www.nuget.org/packages/Oracle.EntityFrameworkCore/">Oracle EF Core provider</a> · <a href="https://docs.oracle.com/en/database/oracle/oracle-database/26/odpnt/EFCoreAPI.html">Oracle compatibility API</a></p></section></main><footer>Private training reference · Sample table and columns are assumed; live database access and provider compatibility have not been tested.</footer><script>document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{const c=b.nextElementSibling.innerText;try{await navigator.clipboard.writeText(c)}catch(e){const t=document.createElement('textarea');t.value=c;document.body.append(t);t.select();const ok=document.execCommand('copy');t.remove();if(!ok){b.textContent='Select code to copy';return}}b.textContent='Copied';setTimeout(()=>b.textContent='Copy code',1400)}));</script></body></html>
