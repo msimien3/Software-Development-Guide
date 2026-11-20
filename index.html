@@ -1,32 +1,29 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Software Development Guide</title>
-<style>
-:root{--bg:#f3f6fa;--ink:#142338;--muted:#52647a;--blue:#146e75;--line:#dce4ed}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,Segoe UI,sans-serif}
-header{background:#142b40;color:white;padding:56px max(22px,calc((100vw - 1040px)/2)) 48px}
-.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9be0d8;font-weight:800}h1{font-size:clamp(34px,5vw,52px);line-height:1.12;margin:12px 0}header p{color:#c5d7e5;max-width:690px}
-main{max-width:1040px;margin:auto;padding:34px 20px 70px}h2{font-size:22px;margin:28px 0 14px}a{text-decoration:none;color:inherit}
-#search{display:block;width:100%;font:inherit;border:1px solid #bfced9;border-radius:11px;padding:14px 17px;background:white;outline-color:var(--blue)}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
-.card{background:white;border:1px solid var(--line);border-radius:14px;padding:25px;display:block;transition:box-shadow .2s,transform .2s}
-[hidden]{display:none!important}.card:hover{box-shadow:0 9px 22px #1423381b;transform:translateY(-2px)}
-.tag{color:var(--blue);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.09em}
-.card h3{margin:8px 0;font-size:23px}.card p{margin:0 0 18px;color:var(--muted)}.visit{color:var(--blue);font-weight:750}
-.empty{display:none;color:var(--muted);padding:20px 0}.future{color:var(--muted);background:white;border:1px dashed #c3d0dc;border-radius:12px;padding:22px}
-footer{max-width:1040px;margin:auto;padding:0 20px 30px;color:var(--muted);font-size:13px}
-</style></head><body>
-<header><div class="eyebrow">Developer reference library</div><h1>Software Development Guide</h1>
-<p>Practical, step-by-step references for configuring, building, and troubleshooting applications with .NET, SQL Server, Oracle, and the modern web.</p></header>
-<main><label for="search"><strong>Find a guide</strong></label>
-<input id="search" type="search" placeholder="Search: Dapper, Entity Framework, Oracle, LINQ…" autocomplete="off">
-<h2>Database access</h2><div class="cards" id="cards">
-<a class="card" href="guides/database/dapper.html" data-keywords="dapper csharp dotnet mssql sql server oracle database query async sqlclient">
-<div class="tag">C# · Data Access</div><h3>Dapper Configuration</h3><p>Install NuGet packages, connect to SQL Server and Oracle, run asynchronous queries, map results, and use safe parameters.</p><span class="visit">Open guide →</span></a>
-<a class="card" href="guides/database/entity-framework.html" data-keywords="entity framework ef core dbcontext linq mssql sql server oracle database raw sql migrations">
-<div class="tag">C# · ORM</div><h3>Entity Framework Core Configuration</h3><p>Set up EF Core providers, entity models, DbContext classes, raw SQL queries, and LINQ for SQL Server and Oracle.</p><span class="visit">Open guide →</span></a>
-</div><p id="empty" class="empty" role="status">No guides match that search.</p>
-<h2>Growing reference library</h2><div class="future">More topics can be added under <code>guides/</code>: ASP.NET Core, Blazor, REST APIs, Dependency Injection, application deployment, and troubleshooting.</div>
-</main><footer>Software Development Guide · Standalone companion to the Training Encyclopedia</footer>
-<script>const search=document.getElementById('search'),cards=[...document.querySelectorAll('.card')],empty=document.getElementById('empty');search.addEventListener('input',()=>{let n=0;const q=search.value.toLowerCase().trim();for(const card of cards){const show=(card.textContent+' '+card.dataset.keywords).toLowerCase().includes(q);card.hidden=!show;if(show)n++}empty.style.display=n?'none':'block'});</script>
-</body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Practical .NET software development configuration and implementation guides.">
+  <title>Software Development Guide</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">◈ Software Development Guide</a>
+    <label class="search-wrap"><span class="sr-only">Search guides</span><input id="search" type="search" placeholder="Search development guides…" aria-label="Search development guides"></label>
+    <button id="theme" class="theme-button" type="button" aria-label="Toggle light and dark theme">☼</button>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-title">EXPLORE</div>
+      <a href="#home" class="nav active">⌂ Dashboard</a>
+      <a href="#library" class="nav">▤ All guides</a>
+      <div class="side-title">CATEGORIES</div>
+      <div id="categories"><a href="#category/.NET" class="nav">.NET</a></div>
+      <div class="aside-foot">Your practical software development reference library</div>
+    </aside>
+    <main id="app" tabindex="-1"></main>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
