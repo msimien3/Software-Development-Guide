@@ -1,0 +1,63 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Dapper | MSSQL & Oracle</title><style>
+:root{color-scheme:light;--ink:#142338;--muted:#516178;--line:#dce4ed;--accent:#146e75;--bg:#f3f6fa}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,Segoe UI,sans-serif}header{background:#142b40;color:#fff;padding:52px 24px 42px}header>div,main,footer{max-width:920px;margin:auto}h1{font-size:clamp(32px,5vw,48px);line-height:1.13;margin:10px 0}header p{color:#c5d7e5;margin:12px 0 0}.eyebrow{font-size:12px;letter-spacing:.16em;font-weight:750;color:#9be0d8}main{padding:24px 18px 40px}nav{display:flex;flex-wrap:wrap;gap:8px 18px;padding:10px 0 24px}a{color:var(--accent);font-weight:650;text-decoration:none}a:hover{text-decoration:underline}section{background:white;border:1px solid var(--line);border-radius:14px;padding:25px;margin-bottom:18px;scroll-margin-top:12px}h2{font-size:23px;line-height:1.3;margin:0 0 14px}h3{font-size:17px;margin:20px 0 8px}p{margin:10px 0}li{margin:5px 0}small,.muted{color:var(--muted)}.num{font-size:13px;display:inline-block;vertical-align:3px;margin-right:10px;color:var(--accent);font-weight:800}.code{position:relative;background:#142338;border-radius:9px;margin:12px 0;color:#e4edf8;overflow:hidden}.code pre{margin:0;padding:44px 16px 18px;overflow:auto;font:13px/1.65 Consolas,monospace;tab-size:4}.copy{position:absolute;right:9px;top:8px;border:1px solid #587084;background:#203b50;color:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font:12px system-ui}p code,li code,td code{background:#edf3f6;padding:2px 5px;border-radius:4px;font-size:.9em;overflow-wrap:anywhere}table{width:100%;border-collapse:collapse;text-align:left}td,th{padding:11px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:12px;text-transform:uppercase;color:var(--muted)}.note{border-left:4px solid #c78b29;background:#fff8e8;padding:12px 15px;border-radius:4px;margin:16px 0}.flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:16px 0}.flow span{border:1px solid var(--line);background:#f2f7f8;padding:8px 12px;border-radius:7px;font-weight:600}.flow b{color:var(--accent)}footer{padding:0 24px 30px;color:var(--muted);font-size:13px}@media print{body{background:white}header{background:white;color:var(--ink);padding:15px}header p,.eyebrow{color:var(--muted)}section{break-inside:auto;border:none;padding:10px}.copy,nav{display:none}.code pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;color:#111;background:#f0f2f4}.code{break-inside:auto}}</style></head><body><header><div><div class="eyebrow">C# / DATABASE ACCESS / QUICK START</div><h1>Dapper with MSSQL &amp; Oracle</h1><p>One model. Two database providers. No DbContext required.</p></div></header><main><nav><a href="#setup">01 NuGet</a><a href="#model">02 Model</a><a href="#program">03 Program</a><a href="#run">04 Run</a><a href="#parameters">05 Parameters</a><a href="#troubleshoot">06 Troubleshooting</a></nav>
+<section id="setup"><h2><span class="num">01</span>Install the NuGet packages</h2><p>Open or create a modern .NET Console App in Visual Studio. In Solution Explorer, right-click the project and select <strong>Manage NuGet Packages</strong>. Select Browse, search for each package below, and click Install. Use versions compatible with your project's target framework.</p><table><thead><tr><th>Package</th><th>Purpose</th></tr></thead><tbody><tr><td><code>Dapper</code></td><td>Maps SQL results to C# objects.</td></tr><tr><td><code>Microsoft.Data.SqlClient</code></td><td>Microsoft SQL Server connection provider.</td></tr><tr><td><code>Oracle.ManagedDataAccess.Core</code></td><td>Oracle connection provider for modern .NET.</td></tr></tbody></table><div class="flow"><span>C# application</span><b>→</b><span>Dapper</span><b>→</b><span>SQL Server / Oracle provider</span><b>→</b><span>Database</span></div><p>No Entity Framework, custom ORM, DbContext or dependency injection is required.</p></section>
+<section id="model"><h2><span class="num">02</span>Create your model</h2><p>Right-click your project → Add → Class. Name it <strong>Coil.cs</strong>. Dapper matches returned column names to the properties in this class.</p><div class="code"><button type="button" class="copy">Copy code</button><pre><code>public class Coil
+{
+    public int Id { get; set; }
+    public string CoilNumber { get; set; } = &quot;&quot;;
+    public double Weight { get; set; }
+}</code></pre></div><p class="muted">The sample assumes the query returns Id, CoilNumber and Weight with compatible types in both databases. Verify your actual schema; alias columns if needed and use nullable properties for nullable values.</p><h3>Project structure</h3><div class="code"><button type="button" class="copy">Copy code</button><pre><code>MillApplication/
+    Program.cs   // Queries and console output
+    Coil.cs      // Shared data model</code></pre></div></section>
+<section id="program"><h2><span class="num">03</span>Query both databases</h2><p>Replace the contents of <strong>Program.cs</strong> with the code below. Supply your approved SQL Server and Oracle connection strings through environment variables.</p><div class="note"><strong>Local training only:</strong> Credentials are intentionally omitted. Configure connection strings using environment variables. For production, load connection strings from approved secret storage or secure configuration. Consider rotating credentials that have been exposed.</div><div class="code"><button type="button" class="copy">Copy code</button><pre><code>using System;
+using System.Collections.Generic;
+using System.Linq;
+using Dapper;
+using Microsoft.Data.SqlClient;
+using Oracle.ManagedDataAccess.Client;
+
+string sqlConnectionString =
+    Environment.GetEnvironmentVariable(&quot;MSSQL_CONNECTION_STRING&quot;) ?? throw new InvalidOperationException(&quot;Set MSSQL_CONNECTION_STRING&quot;);
+
+string oracleConnectionString =
+    Environment.GetEnvironmentVariable(&quot;ORACLE_CONNECTION_STRING&quot;) ?? throw new InvalidOperationException(&quot;Set ORACLE_CONNECTION_STRING&quot;);
+
+string query = &quot;SELECT * FROM Coils WHERE Weight &gt; 20&quot;;
+
+// Microsoft SQL Server
+using var sqlConn = new SqlConnection(sqlConnectionString);
+List&lt;Coil&gt; sqlCoils = (await sqlConn.QueryAsync&lt;Coil&gt;(query)).ToList();
+
+Console.WriteLine(&quot;MSSQL coils:&quot;);
+foreach (Coil coil in sqlCoils)
+{
+    Console.WriteLine($&quot;{coil.CoilNumber}: {coil.Weight} tons&quot;);
+}
+
+// Oracle
+using var oracleConn = new OracleConnection(oracleConnectionString);
+List&lt;Coil&gt; oracleCoils = (await oracleConn.QueryAsync&lt;Coil&gt;(query)).ToList();
+
+Console.WriteLine(&quot;Oracle coils:&quot;);
+foreach (Coil coil in oracleCoils)
+{
+    Console.WriteLine($&quot;{coil.CoilNumber}: {coil.Weight} tons&quot;);
+}</code></pre></div><h3>What each part does</h3><table><tbody><tr><td><code>SqlConnection</code></td><td>Connects to MSSQL.</td></tr><tr><td><code>OracleConnection</code></td><td>Connects to Oracle.</td></tr><tr><td><code>QueryAsync&lt;Coil&gt;()</code></td><td>Executes the query asynchronously and maps rows to Coil objects.</td></tr><tr><td><code>await</code></td><td>Waits for query completion without blocking during asynchronous I/O.</td></tr><tr><td><code>ToList()</code></td><td>Converts results into a List&lt;Coil&gt;.</td></tr><tr><td><code>using var</code></td><td>Disposes the connection at the end of the scope; Dapper opens a closed connection for the query automatically.</td></tr></tbody></table></section>
+<section id="run"><h2><span class="num">04</span>Run and display the results</h2><p>Press <strong>Ctrl+F5</strong> in Visual Studio. Example output (illustrative, not retrieved from your servers):</p><div class="code"><button type="button" class="copy">Copy code</button><pre><code>MSSQL coils:
+C1001: 23.5 tons
+C1003: 25.2 tons
+
+Oracle coils:
+C2001: 22.7 tons</code></pre></div><p>The queries run sequentially. If the first query fails, execution stops before the second. You must have network access and SELECT permissions on both databases.</p></section>
+<section id="parameters"><h2><span class="num">05</span>Use parameterized queries</h2><p>For a variable filter, use parameters rather than concatenating user input into SQL. Add this code before the end of Program.cs, where the connection variables are still in scope.</p><div class="code"><button type="button" class="copy">Copy code</button><pre><code>double minWeight = 20;
+
+List&lt;Coil&gt; sqlResults = (await sqlConn.QueryAsync&lt;Coil&gt;(
+    &quot;SELECT * FROM Coils WHERE Weight &gt; @MinWeight&quot;,
+    new { MinWeight = minWeight }
+)).ToList();
+
+List&lt;Coil&gt; oracleResults = (await oracleConn.QueryAsync&lt;Coil&gt;(
+    &quot;SELECT * FROM Coils WHERE Weight &gt; :MinWeight&quot;,
+    new { MinWeight = minWeight }
+)).ToList();</code></pre></div><p>SQL Server uses <code>@MinWeight</code>; Oracle uses <code>:MinWeight</code>. This single-parameter Oracle example avoids positional binding ambiguity.</p></section>
+<section id="troubleshoot"><h2><span class="num">06</span>Troubleshooting</h2><table><thead><tr><th>Problem</th><th>Check</th></tr></thead><tbody><tr><td>QueryAsync not found</td><td>Install Dapper and add <code>using Dapper;</code>.</td></tr><tr><td>Invalid object or table</td><td>Verify actual schema, table name and SELECT permissions.</td></tr><tr><td>Login / network failure</td><td>Verify credentials, server access, firewall and Oracle service name.</td></tr><tr><td>SQL Server certificate error</td><td>Modern SqlClient defaults to encryption; use a trusted server certificate or consult your IT team for approved connection options.</td></tr><tr><td>Incorrect or missing model values</td><td>Check returned column names, aliases, data types and nullability.</td></tr></tbody></table></section></main><footer>Training reference • Dapper / SQL Server / Oracle • Never commit database credentials.</footer><script>document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{const c=b.nextElementSibling.innerText;try{await navigator.clipboard.writeText(c)}catch(e){const t=document.createElement('textarea');t.value=c;document.body.append(t);t.select();const ok=document.execCommand('copy');t.remove();if(!ok){b.textContent='Select code to copy';return}}b.textContent='Copied';setTimeout(()=>b.textContent='Copy code',1400)}));</script></body></html>
